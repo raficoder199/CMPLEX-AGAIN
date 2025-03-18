@@ -24,7 +24,7 @@ const UserSchema = new Schema(
             type:String,
             required:true,
             minlength:8,
-            lowercase:true,
+  
             
           
         },
@@ -62,9 +62,15 @@ UserSchema.pre("save", async function (next) {
     next();
 });
 
-UserSchema.methods.isPasswordCorrect = async function (password){
-    return await bcrypt.compare(password, this.password)
- }
+UserSchema.methods.isPasswordCorrect = async function (password) {
+   
+
+    const result = await bcrypt.compare(password, this.password);
+   
+
+    return result;
+};
+
 
 
 UserSchema.methods.generateAccessToken = async function (){

@@ -3,7 +3,7 @@ import {ApiError} from "../utils/ApiErrors.js"
 import { User } from "../models/user.model.js";
 import { UploadOnCLoudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
-import bcrypt from "bcryptjs";
+
 
 
 
@@ -115,14 +115,19 @@ const loginUser = asyncHandler(async(req,res)=>{
            //send to cookie
            // return res
 
-           const {email,password} = req.body;
-            if(!email){
-                throw new ApiError(400, "email  is required")
+           const {email,username,password} = req.body;
+            if(!email && !username){
+                throw new ApiError(400, "email or username   is required")
             }
 
            
           
-            const user = await User.findOne({ email }); 
+            const user = await User.findOne({ 
+                $or:[
+                    {email},
+                    {username}
+                ]
+            }); 
 
 
         
@@ -134,7 +139,7 @@ const loginUser = asyncHandler(async(req,res)=>{
 
 
 
-        const isPasswordValid =user.isPasswordCorrect(password)
+        const isPasswordValid =await user.isPasswordCorrect(password)
 
         
 
