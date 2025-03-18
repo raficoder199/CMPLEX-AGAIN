@@ -3,13 +3,14 @@ import {ApiError} from "../utils/ApiErrors.js"
 import { User } from "../models/user.model.js";
 import { UploadOnCLoudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import bcrypt from "bcryptjs";
 
 
 
 const generateAccessTokenandRefreshToken = async(userid)=>{
      
   try {
-             const user = User.findById(userid)
+             const user = await User.findById(userid)
              const accessToken = await user.generateAccessToken()
              const refreshToken = await user.generateRefreshToken()
 
@@ -75,7 +76,9 @@ const registerUser = asyncHandler(async(req,res)=>{
 
      if(!avatar){
         throw new ApiError(500,"failed to upload avatar")
+
      }
+     
 
      const user = await User.create({
         fullname,
@@ -112,26 +115,30 @@ const loginUser = asyncHandler(async(req,res)=>{
            //send to cookie
            // return res
 
-           const {email,username,password} = req.body;
-           if(
-            [email,username,password].some((field)=>field?.trim()=== "")
-        ){
-            throw new ApiError(400,"email and password is required")
-        }
+           const {email,password} = req.body;
+            if(!email){
+                throw new ApiError(400, "email  is required")
+            }
 
-        const user = await User.findOne({
-            $or:[
-                {email}, {username}
-            ]
-        })
+           
+          
+            const user = await User.findOne({ email }); 
+
+
+        
 
         if(!user){
          throw new ApiError(410, "user does not exist")
         }
+        
 
-        const isPasswordCorrect = await user.isPasswordCorrect(password)
 
-        if(!isPasswordCorrect){
+
+        const isPasswordValid =user.isPasswordCorrect(password)
+
+        
+
+        if(!isPasswordValid){
             throw new ApiError(401, "invalid email or password")
         }
          
@@ -142,8 +149,8 @@ const loginUser = asyncHandler(async(req,res)=>{
              secure:true
         }
 
-        res.status(200).cookie("accessToken", accessToken).cookie("refreshToken", refreshToken,options).json({
-         user: accessToken,refreshToken,
+        res.status(200).cookie("accessToken", accessToken,options).cookie("refreshToken", refreshToken,options).json({
+         user,
          message: "user logged in successfully"
         })
 
