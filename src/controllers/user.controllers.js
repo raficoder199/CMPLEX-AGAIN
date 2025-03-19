@@ -376,6 +376,85 @@ const updateCoverImage = asyncHandler(async(req,res)=>{
 
 })
 
+const getUserChannel = asyncHandler(async(req,res)=>{
+
+    const {username} = req.params;
+    if(!username.trm()){
+        throw new ApiError(400, "username does not exists")
+    }
+
+    const channel = await User.aggregate([
+        {
+            $match:{
+                username:username?.toLowerCase()
+            }
+        },
+
+        {
+            $lookup:{
+                from:"subscribers",
+                localField:"_id",
+                foreignField:"channel",
+                as:"subscriberss"
+            }
+        },
+        {
+            $lookup:{
+                from:"subscribers",
+                localField:"_id",
+                foreignField:"subscriber",
+                as:"subscriberssTo"
+            }
+
+        },
+        {
+            $addFields:{
+               subscriberCount:{
+                $size:"$subscriberss"
+               },
+               subscribedTo:{
+                $size:"$subscriberssTo"
+               },
+               isSubscribed:{
+                $cond:{
+                    if:{$in:[req.user._id,$subscriberss.subscriber]
+                    
+                },
+                   then:true,
+                   else:false    
+                }
+               }
+            }
+        },
+        {
+            $project:{
+                username:1,
+                email:1,
+                fullname:1,
+                avatar:1,
+                coverImage:1,
+                subscriberCount:1,
+                subscribedTo:1,
+                isSubscribed:1
+            }
+        }
+    ])
+    if(!channel){
+        throw new ApiError(404, "channel not found")
+    }
+
+    res.status(200)
+    .json(
+        new ApiResponse(
+            200,
+            channel[0],
+            "channel fetched successfully"
+          )
+    )
+})
+
+console.log(getUserChannel)
+
 export {
 registerUser,
 loginUser,
@@ -385,4 +464,5 @@ changeCurrentPassword,
 getUserProfile,
 updateUserProfile,
 updateAvatar,
-updateCoverImage}
+updateCoverImage,
+getUserChannel}
