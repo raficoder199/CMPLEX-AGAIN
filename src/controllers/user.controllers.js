@@ -310,7 +310,7 @@ const updateUserProfile = asyncHandler(async(req,res)=>{
 
 const updateAvatar = asyncHandler(async(req,res)=>{
 
-    const avatarLocalPath = req.file?.avatar[0]?.path;
+    const avatarLocalPath = req.file?.path;
     if(!avatarLocalPath){
         throw new ApiError(400, "avatar is missing")
     }
@@ -345,13 +345,13 @@ const updateAvatar = asyncHandler(async(req,res)=>{
 
 const updateCoverImage = asyncHandler(async(req,res)=>{
 
-    const coverImageLocalPath = req.file?.coverImage[0]?.path;
+    const coverImageLocalPath = req.file?.path;
     if(!coverImageLocalPath){
         throw new ApiError(400, "coverImage is missing")
     }
 
     const coverImage = await  UploadOnCLoudinary(coverImageLocalPath)
-    if(!avatar){
+    if(!coverImage){
         throw new ApiError(500,"failed to upload coverImage")
     }
     await User.findByIdAndUpdate(
@@ -380,7 +380,7 @@ const updateCoverImage = asyncHandler(async(req,res)=>{
 const getUserChannel = asyncHandler(async(req,res)=>{
 
     const {username} = req.params;
-    if(!username.trm()){
+    if(!username.trim()){
         throw new ApiError(400, "username does not exists")
     }
 
@@ -418,7 +418,7 @@ const getUserChannel = asyncHandler(async(req,res)=>{
                },
                isSubscribed:{
                 $cond:{
-                    if:{$in:[req.user._id,$subscriberss.subscriber]
+                    if:{$in:[req.user._id, "$subscriberss.subscriber"]
                     
                 },
                    then:true,
@@ -444,12 +444,13 @@ const getUserChannel = asyncHandler(async(req,res)=>{
         throw new ApiError(404, "channel not found")
     }
 
-    res.status(200)
+   return  res.status(200)
     .json(
         new ApiResponse(
             200,
             channel[0],
-            "channel fetched successfully"
+            "channel fetched successfully",
+            
           )
     )
 })
@@ -505,7 +506,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     )
 });
 
-console.log(getUserChannel)
+
 
 export {
 registerUser,

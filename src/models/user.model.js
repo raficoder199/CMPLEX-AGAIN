@@ -45,9 +45,7 @@ const UserSchema = new Schema(
             
         },
         refreshToken:{
-            type:{
-                String,
-            }
+            type:String
         },
         watchHistory:[
             {
